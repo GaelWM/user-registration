@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import winston from "winston";
+import Joi from "joi";
 import { userRegistrationSaga } from "./orchestrators/user.orchestrator";
 import { getUser } from "../models/user.model";
 import { userVerificationSaga } from "./orchestrators/user-verification.orchestrator";
@@ -16,6 +17,9 @@ export class UserController {
   public signUp = async (req: Request, res: Response) => {
     const { name, email, password } = req.body;
     try {
+      const { error } = this.validateRequest(req.body);
+      if (error) return res.status(400).send(error.details[0].message);
+
       const user = await getUser(email);
       if (user != null) {
         res.status(400).send("User already exists.");
@@ -45,5 +49,15 @@ export class UserController {
       winston.error(`user-service -> verifyUser: ${error.message}`);
       res.status(500).send(error.message);
     }
+  };
+
+  public validateRequest = (payload: Record<string, unknown>) => {
+    const schema = Joi.object({
+      name: Joi.string().required(),
+      email: Joi.string().required().email(),
+      password: Joi.string().required().min(8),
+    }).options({ allowUnknown: true });
+
+    return schema.validate(payload);
   };
 }

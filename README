@@ -76,3 +76,7 @@ The project exposes 4 endpoints
 2.  http::localhost:3000/auth/auth/verify-user --> helps verify the user after this one has clicked on the link sent by email
 3.  http::localhost:3000/ --> help list all users
 4.  http::localhost:4000/ --> Helps list all emails & token
+
+## Notes
+
+- There are images attached to see what to expect as results under images directory in the root of the project.
