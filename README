@@ -21,14 +21,15 @@ Scenario Steps:
 
    - The Email Service is subscribed to the Kafka topic where UserCreated events are published.
    - Upon receiving a UserCreated event, the Email Service extracts the user's email address from the event and generates an email verification token.
-   - It sends an email to the user's provided email address, including the verification token, and publishes an EmailSent event to another Kafka topic, containing the user ID.
+   - The Email Service records the email and the token generated
+   - It sends an email to the user's provided email address, including the verification token, and publishes an EmailSent event to another Kafka topic, containing the User ID.
 
 3. Email Verification:
    - The User Service is subscribed to the Kafka topic where EmailSent events are published.
    - Upon receiving an EmailSent event, the User Service starts processing the event.
    - It retrieves the user ID from the event and associates the email verification token with the user account.
    - If the user verifies the email address by clicking on the verification link in the email, the User Service updates the user's email verification status to "Verified" and publishes an EmailVerified event to the Kafka topic, containing the user Email.
-   - If the email verification fails (e.g., expired token or invalid link), the User Service can publish an EmailVerificationFailed event to the Kafka topic, indicating the failure and taking appropriate actions (e.g., notifying the user or retrying the verification process).
+   - If the email verification fails (e.g., expired token or invalid link), the User Service can publish an EmailVerificationFailed event to the Kafka topic, indicating the failure and taking appropriate actions.
 
 #### Project services used
 
@@ -47,13 +48,31 @@ Scenario Steps:
 
 Before running this Docker Compose configuration, ensure that you have Docker and Docker Compose installed on your system.
 
-## Usage
+## Project Setup
 
-1. Create a directory to hold the Docker Compose file.
-2. Copy the contents of the Docker Compose file into a file named `docker-compose.yml` within the directory.
-3. Open a terminal or command prompt and navigate to the directory containing the Docker Compose file.
-4. Run the following command to start the services:
+- Clone the repo `git clone https://github.com/GaelWM/user-registration.git`
+- Open your terminal, on the root of the project run `docker-compose build  & docker-compose up`
+- Wait for about 30 seconds to a minute for all services to be up
+- Double check that all services are up, if not restart them
 
-   ```shell
-   docker-compose up -d
-   ```
+# Project UI tools:
+
+This helps managing all your activities with a graphical user interface.
+
+- Confluent Control Center: http://localhost:9021
+- User Service: http://localhost:3000
+- Email Service: http://localhost:4000
+- Mongo Express (User): http://localhost:8081
+- Mongo Express (Email): http://localhost:8082
+- MailHog Web Interface: http://localhost:8025
+
+Feel free to adjust the exposed ports or modify the configuration based on your specific needs.
+
+# How to test
+
+The project exposes 4 endpoints
+
+1.  http::localhost:3000/auth/sign-up -> helps to sign up a user by passing (name, email, password)
+2.  http::localhost:3000/auth/auth/verify-user --> helps verify the user after this one has clicked on the link sent by email
+3.  http::localhost:3000/ --> help list all users
+4.  http::localhost:4000/ --> Helps list all emails & token
