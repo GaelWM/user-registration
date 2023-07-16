@@ -1,5 +1,37 @@
 version: "3.9"
 services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper
+    ports:
+      - 2181:2181
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka
+    ports:
+      - 9092:9092
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center
+    ports:
+      - 9021:9021
+    depends_on:
+      - zookeeper
+      - kafka
+    environment:
+      CONTROL_CENTER_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      CONTROL_CENTER_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: "kafka:9092"
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+
   user-service:
     build:
       context: .
@@ -10,8 +42,11 @@ services:
     depends_on:
       - user-service-db
       - kafka
+    restart: on-failure
     environment:
       - KAFKA_BROKER_HOST=kafka:9092
+    command: bash -c "sleep 20 && npm start"
+
   email-service:
     build:
       context: .
@@ -22,8 +57,12 @@ services:
     depends_on:
       - email-service-db
       - kafka
+    restart: on-failure
     environment:
       - KAFKA_BROKER_HOST=kafka:9092
+    command: bash -c "sleep 20 && npm start"
+
+  # database for user-service
   user-service-db:
     image: mongo:latest
     container_name: mongo-user-service-db
@@ -31,6 +70,18 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data1:/data/db
+
+  mongo-express-user:
+    image: mongo-express
+    ports:
+      - 8081:8081
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=user-service-db
+      - ME_CONFIG_MONGODB_PORT=27017
+    depends_on:
+      - user-service-db
+
+  # database for email service
   email-service-db:
     image: mongo:latest
     container_name: mongo-email-service-db
@@ -38,32 +89,33 @@ services:
       - "27018:27017"
     volumes:
       - mongo_data2:/data/db
-  kafka:
-    image: confluentinc/cp-kafka:6.2.0
-    container_name: kafka
+
+  mongo-express-email:
+    image: mongo-express
     ports:
-      - "9092:9092"
+      - 8082:8081
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_LISTENERS: PLAINTEXT://:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
-      KAFKA_DELETE_TOPIC_ENABLE: "true"
-      KAFKA_AUTO_LEADER_REBALANCE_ENABLE: "true"
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-  zookeeper:
-    image: confluentinc/cp-zookeeper:6.2.0
-    container_name: zookeeper
+      - ME_CONFIG_MONGODB_SERVER=email-service-db
+      - ME_CONFIG_MONGODB_PORT=27017
+    depends_on:
+      - email-service-db
+
+  mailhog:
+    image: mailhog/mailhog
     ports:
-      - "2181:2181"
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+      - 1025:1025
+      - 8025:8025
+    depends_on:
+      - email-service
+
+networks:
+  kafka-network:
+    driver: bridge
 
 volumes:
+  zookeeper_data:
+    driver: local
+  kafka_data:
+    driver: local
   mongo_data1:
   mongo_data2:

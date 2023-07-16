@@ -17,4 +17,5 @@ export enum SagaStepEventType {
 export enum TopicNames {
   UserCreated = "UserCreated",
   EmailSent = "EmailSent",
+  EmailNotSent = "EmailNotSent",
 }

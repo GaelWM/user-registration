@@ -1,4 +1,4 @@
-import mongoose, { Query } from "mongoose";
+import mongoose from "mongoose";
 import winston from "winston";
 
 export interface IUser {
@@ -34,6 +34,10 @@ const userSchema = new mongoose.Schema({
     enum: ["Verified", "Not Verified"],
     default: "active",
   },
+  token: {
+    type: String,
+    required: false,
+  },
 });
 
 const User = mongoose.model("User", userSchema);
@@ -63,12 +67,15 @@ const getUser = async (
 const createUser = async (
   name: string,
   email: string,
-  password: string
-): Promise<mongoose.Document<unknown, {}, IUser> | null> => {
+  password: string,
+  token?: string
+) => {
   const user = new User({
     name,
     email,
     password,
+    status: "Not Verified",
+    token,
   });
 
   try {
@@ -81,13 +88,30 @@ const createUser = async (
 };
 
 const updateUser = async (
+  _id: string,
+  token: string,
+  status?: "Verified" | "Not Verified"
+): Promise<mongoose.Document<unknown, {}, IUser> | null> => {
+  try {
+    return await User.findOneAndUpdate(
+      { _id },
+      { $set: { token, ...(status ? { status } : {}) } },
+      { new: true }
+    );
+  } catch (error: any) {
+    winston.error(error.message);
+    throw new Error(error);
+  }
+};
+
+const updateUserStatus = async (
   email: string,
-  name: string
+  status: "Verified" | "Not Verified"
 ): Promise<mongoose.Document<unknown, {}, IUser> | null> => {
   try {
     return await User.findOneAndUpdate(
       { email },
-      { $set: { name } },
+      { $set: { status } },
       { new: true }
     );
   } catch (error: any) {
@@ -107,4 +131,12 @@ const deleteUser = async (
   }
 };
 
-export { User, createUser, updateUser, getUser, getUsers, deleteUser };
+export {
+  User,
+  createUser,
+  updateUser,
+  getUser,
+  getUsers,
+  deleteUser,
+  updateUserStatus,
+};

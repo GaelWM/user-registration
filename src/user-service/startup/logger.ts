@@ -7,6 +7,7 @@ export default () => {
         winston.format.colorize(),
         winston.format.simple()
       ),
+      // level: "error",
     }),
     new winston.transports.File({ filename: "uncaughtExceptions.log" })
   );

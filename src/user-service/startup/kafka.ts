@@ -1,7 +1,12 @@
 import { Kafka } from "kafkajs";
 import config from "config";
 
-export default new Kafka({
+const kafkaBrokerHost =
+  process.env.KAFKA_BROKER_HOST ?? config.get("kafka.host") ?? "kafka:9092";
+
+const kafka = new Kafka({
   clientId: config.get("kafka.clientId"),
-  brokers: config.get("kafka.brokers"),
+  brokers: [kafkaBrokerHost],
 });
+
+export default kafka;

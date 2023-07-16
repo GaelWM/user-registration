@@ -1,8 +1,11 @@
 {
   "port": 3000,
-  "dbUri": "mongodb://127.0.0.1:27017/user-management",
+  "dbUri": "mongodb://user-service-db:27017/user-management",
   "kafka": {
+    "host": "localhost:9092",
     "clientId": "user-service",
-    "brokers": ["127.0.0.1:9092"]
-  }
+    "brokers": ["localhost:9092"]
+  },
+  "jwtSecret": "YouWillNeverWalkAlone",
+  "jwtExpirationSeconds": 300
 }

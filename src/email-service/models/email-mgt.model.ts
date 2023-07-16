@@ -4,7 +4,6 @@ import winston from "winston";
 export interface IEmailMgt {
   token: string;
   email: string;
-  validity: number;
 }
 
 const userSchema = new mongoose.Schema({
@@ -20,11 +19,6 @@ const userSchema = new mongoose.Schema({
     required: true,
     minLength: 5,
     maxLength: 1024,
-  },
-  validity: {
-    type: Number,
-    required: true,
-    default: 1,
   },
 });
 
@@ -54,13 +48,11 @@ const getEmail = async (
 
 const saveEmail = async (
   token: string,
-  email: string,
-  validity: string
+  email: string
 ): Promise<mongoose.Document<unknown, {}, IEmailMgt> | null> => {
   const emailMgt = new EmailMgt({
     token,
     email,
-    validity,
   });
 
   try {

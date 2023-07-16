@@ -11,10 +11,14 @@ export interface SagaStep {
 }
 
 export enum SagaStepEventType {
-  UserCreated = "UserCreated",
+  CreateUser = "Create User",
+  UpdateUserStatus = "Update User Status",
+  PublishUserVerifiedEvent = "Publish User Verified Event",
 }
 
 export enum TopicNames {
   UserCreated = "UserCreated",
   EmailSent = "EmailSent",
+  EmailVerified = "EmailVerified",
+  EmailVerificationFailed = "EmailVerificationFailed",
 }

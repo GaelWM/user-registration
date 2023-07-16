@@ -1,8 +1,14 @@
 {
   "port": 4000,
-  "dbUri": "mongodb://127.0.0.1:27017/emails-management",
+  "dbUri": "mongodb://email-service-db:27017/emails-management",
   "kafka": {
+    "host": "localhost:9092",
     "clientId": "email-service",
-    "brokers": ["127.0.0.1:9092"]
-  }
+    "brokers": ["localhost:9092"]
+  },
+  "user-service": {
+    "host": "http://localhost:3000"
+  },
+  "jwtSecret": "YouWillNeverWalkAlone",
+  "jwtExpirationSeconds": 300
 }

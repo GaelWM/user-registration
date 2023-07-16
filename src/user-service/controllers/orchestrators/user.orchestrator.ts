@@ -1,55 +1,42 @@
 import winston from "winston";
 import { Saga, SagaStepEventType, TopicNames } from "../../shared/saga.model";
-import { SagaOrchestrator } from "../../shared/saga.orchestrator";
-import { createUser, getUser, deleteUser } from "../../models/user.model";
+import { createUser, deleteUser } from "../../models/user.model";
 import kafka from "../../startup/kafka";
+import { Partitioners } from "kafkajs";
 
-const producer = kafka.producer();
+const producer = kafka.producer({
+  createPartitioner: Partitioners.LegacyPartitioner,
+});
 
 const userRegistrationSaga: Saga = {
   id: "user-registration",
   name: "User Registration",
   steps: [
     {
-      name: "Check if user exists",
-      action: async (data: any) => {
-        const { email } = data;
-        const user = await getUser(email);
-        if (user) {
-          producer.send({
-            topic: "UserExists",
-            messages: [{ value: JSON.stringify(user) }],
-          });
-        }
-      },
-      compensation: async (data) => {
-        // No compensation needed
-      },
-    },
-    {
-      name: "Create User",
+      name: SagaStepEventType.CreateUser,
       action: async (data) => {
         const { name, email, password } = data;
         try {
           const user = await createUser(name, email, password);
           if (user) {
+            await producer.connect();
             const event = {
-              type: SagaStepEventType.UserCreated,
+              type: TopicNames.UserCreated,
               userId: user._id,
               userDetails: user,
             };
 
-            producer.send({
+            await producer.send({
               topic: TopicNames.UserCreated,
               messages: [{ value: JSON.stringify(event) }],
             });
+            await producer.disconnect();
           }
         } catch (error: any) {
           winston.error(`user-registration -> Create User: ${error.message}`);
         }
       },
       compensation: async (data) => {
-        // Perform the compensation action for creating a user
         try {
           await deleteUser(data.email);
         } catch (error: any) {
@@ -62,10 +49,4 @@ const userRegistrationSaga: Saga = {
   ],
 };
 
-// Create the saga orchestrator
-const userOrchestrator = new SagaOrchestrator();
-
-// Register your sagas
-userOrchestrator.registerSaga(userRegistrationSaga);
-
-export { userOrchestrator };
+export { userRegistrationSaga };
