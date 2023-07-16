@@ -1,0 +1,15 @@
+# ignore ALL .log files
+*.log
+
+# ignore ALL .env files
+*.env
+
+# igone node_modules in root
+node_modules/*
+
+# ignore node_modules in subfolders
+src/user-service/node_modules/*
+src/email-service/node_modules/*
+
+# ignore recover.txt in root
+recover.txt
