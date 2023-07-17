@@ -77,6 +77,19 @@ The project exposes 4 endpoints
 3.  http::localhost:3000/ --> help list all users
 4.  http::localhost:4000/ --> Helps list all emails & token
 
+5.  Find the postman export of apis endpoints in the root of the folder
+6.  Import the file to postman
+7.  And you should see 3 apis where the signUp is really the main one
+8.  Go on add your details in the body and click on Send button
+9.  You should get either two responses "User created successfully or User Already Exists"
+10. Now that you did that,
+11. Open Confluent Control Center on http://localhost:9021 and go on topics you should be able to see two events
+    One UserCreated event and another EmailSent, you can check the details of the message
+12. On success of this message an email should be sent to the default account of mailhog
+13. Open Mailhog on http://localhost:8025, you should be able to see an email with the link and click on the link to verify the user
+14. After doing so, go back to Confluent Control Center on http://localhost:9021, you now be able to see EmailVerified event being sent.
+15. Check the details of the message.
+
 ## Notes
 
 - There are images attached to see what to expect as results under images directory in the root of the project.
